@@ -74,7 +74,7 @@ async function removeAllListeners() {
 }
 
 // --- Store methods and exports ---
-export default function useDataStore() {
+export default function useDataStore(showApprovedOnly=true) {
   /**
    * @notice Called on init and network change - but can also be called on demand
    */
@@ -98,7 +98,7 @@ export default function useDataStore() {
 
     // Get all grants and round data held in the registry/roundManager
     const [grantsData, grantRoundData, grantRoundDonationTokenAddress] = await Promise.all([
-      getAllGrants(forceRefresh),
+      getAllGrants(forceRefresh, showApprovedOnly),
       getAllGrantRounds(forceRefresh),
       grantRoundManager.value.donationToken(),
     ]);
