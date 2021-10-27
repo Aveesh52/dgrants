@@ -6,7 +6,7 @@ import { syncStorage } from 'src/utils/data/utils';
 import { BigNumber, BigNumberish, Event } from 'ethers';
 // --- Constants ---
 import { allGrantsKey } from 'src/utils/constants';
-import { START_BLOCK, SUBGRAPH_URL } from 'src/utils/chains';
+import { DGRANTS_CHAIN_ID, START_BLOCK, SUBGRAPH_URL } from 'src/utils/chains';
 // --- Data ---
 import useWalletStore from 'src/store/wallet';
 import { batchFilterCall } from '../utils';
@@ -18,12 +18,29 @@ import { getMetadata } from './ipfs';
 const { grantRegistry, provider } = useWalletStore();
 
 /**
+ * @notice helper function to filter approved grants
+ *
+ * @param grants Grant[]
+ */
+async function getApprovedGrants(grants: Grant[]) {
+  const uniqueStr = '?unique=' + Date.now();
+
+  const whitelistUrl = import.meta.env.VITE_GRANT_WHITELIST_URI;
+  if (whitelistUrl) {
+    const url = whitelistUrl + uniqueStr;
+    const json = await fetch(url).then((res) => res.json());
+    grants = grants.filter((grant) => json[DGRANTS_CHAIN_ID].includes(grant.id));
+  }
+
+  return grants;
+}
+
+/**
  * @notice Get/Refresh all Grants
  *
  * @param {boolean} forceRefresh Force the cache to refresh
  */
-
-export async function getAllGrants(forceRefresh = false) {
+export async function getAllGrants(forceRefresh = false, showApprovedOnly = true) {
   const latestBlockNumber = BigNumber.from(await provider.value.getBlockNumber()).toNumber();
 
   return await syncStorage(
@@ -130,6 +147,11 @@ export async function getAllGrants(forceRefresh = false) {
         save({
           grants: _lsGrants,
         });
+      }
+
+      // conditionally filter out unapproved grants
+      if (showApprovedOnly) {
+        grants.grants = await getApprovedGrants(grants.grants);
       }
 
       // returns all Grants[]
