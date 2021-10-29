@@ -7,7 +7,7 @@ import { Event } from 'ethers';
 import { BigNumber, BigNumberish, commify, Contract, ContractTransaction, isAddress, Logger } from 'src/utils/ethers';
 import { BatchFilterQuery, EtherscanGroup } from 'src/types';
 import useWalletStore from 'src/store/wallet';
-import { GrantRound } from '@dgrants/types';
+import { Grant, GrantRound } from '@dgrants/types';
 import { formatUnits } from 'src/utils/ethers';
 import { ETH_ADDRESS } from 'src/utils/constants';
 import { ETHERSCAN_BASE_URL, FILTER_BLOCK_LIMIT, SUPPORTED_TOKENS_MAPPING, WETH_ADDRESS } from 'src/utils/chains';
@@ -364,4 +364,18 @@ export const sortByStartTime = (a: GrantRound, b: GrantRound) => {
     : BigNumber.from(a.startTime).toNumber() === BigNumber.from(b.startTime).toNumber()
     ? 0
     : 1;
+};
+
+/**
+ * Shuffles list of grants / grant rounds
+ * @param unshuffled
+ * @returns shuffled
+ */
+export const shuffle = (unshuffled: Grant[] | GrantRound[]) => {
+  const shuffled = unshuffled
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+
+  return shuffled;
 };
